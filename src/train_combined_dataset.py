@@ -98,7 +98,7 @@ class CombinedDatasetTrainer:
         """Load AllSides CSV dataset."""
         print("📊 Loading AllSides dataset...")
         
-        df = pd.read_csv('../allsides_balanced_news_headlines-texts.csv')
+        df = pd.read_csv('../data/allsides_balanced_news_headlines-texts.csv')
         df = df.dropna(subset=['text', 'bias_rating'])
         df = df[df['text'].str.len() > 10]
         
@@ -249,6 +249,10 @@ class CombinedDatasetTrainer:
         """Train the model on combined dataset."""
         print(f"\n🚀 Starting training on combined dataset...")
         
+        # Ensure output directory exists
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"📁 Model will be saved to: {output_dir}")
+        
         # Conservative settings for stability
         batch_size = 8
         num_workers = 0
@@ -369,8 +373,15 @@ class CombinedDatasetTrainer:
             'label_mapping': self.id2label
         }
         
-        with open(f'combined_dataset_results_{timestamp}.json', 'w') as f:
+        # Ensure results directory exists
+        results_dir = '../results'
+        os.makedirs(results_dir, exist_ok=True)
+        
+        results_path = f'{results_dir}/combined_dataset_results_{timestamp}.json'
+        with open(results_path, 'w') as f:
             json.dump(results, f, indent=2)
+        
+        print(f"💾 Results saved to: {results_path}")
         
         return results
 

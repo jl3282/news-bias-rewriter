@@ -35,7 +35,6 @@ news-bias-rewriter/
 │   └── splits/             # Pre-defined train/val/test splits
 ├── results/                # Training results & evaluations
 ├── docs/                   # Documentation & analysis
-│   └── COMPREHENSIVE_MODEL_ANALYSIS.md
 ├── archive/                # Previous experiments
 └── README.md
 ```
@@ -103,5 +102,3 @@ News Bias Detection and Rewriting System
 Fine-tuned RoBERTa for Political Bias Classification
 [Your Name/Institution], 2025
 ```
-
-For detailed analysis and methodology, see `docs/COMPREHENSIVE_MODEL_ANALYSIS.md`

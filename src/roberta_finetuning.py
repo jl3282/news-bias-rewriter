@@ -205,6 +205,10 @@ class BiasClassificationTrainer:
         """
         print(f"🚀 Starting fine-tuning...")
         
+        # Ensure output directory exists
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"📁 Model will be saved to: {output_dir}")
+        
         # Training arguments with conservative settings for stability
         batch_size = 8   # Conservative batch size for stability
         num_workers = 0  # No multiprocessing to avoid system overload
@@ -341,8 +345,15 @@ class BiasClassificationTrainer:
             'label_mapping': self.id2label
         }
         
-        with open(f'roberta_finetuned_results_{results["timestamp"]}.json', 'w') as f:
+        # Ensure results directory exists
+        results_dir = '../results'
+        os.makedirs(results_dir, exist_ok=True)
+        
+        results_path = f'{results_dir}/roberta_finetuned_results_{results["timestamp"]}.json'
+        with open(results_path, 'w') as f:
             json.dump(results, f, indent=2)
+        
+        print(f"💾 Results saved to: {results_path}")
         
         return results
     
@@ -453,7 +464,7 @@ def main():
     
     # Load and prepare data
     train_dataset, val_dataset, test_dataset = trainer_obj.load_and_prepare_data(
-        '../allsides_balanced_news_headlines-texts.csv'
+        '../data/allsides_balanced_news_headlines-texts.csv'
     )
     
     # Fine-tune the model

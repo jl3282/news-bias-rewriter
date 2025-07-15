@@ -3,6 +3,7 @@
 Evaluate the fine-tuned RoBERTa model on test set
 """
 
+import os
 import json
 import pandas as pd
 import numpy as np
@@ -20,7 +21,7 @@ def load_test_data():
     print("📊 Loading test data...")
     
     # Load data - same process as training
-    df = pd.read_csv('../allsides_balanced_news_headlines-texts.csv')
+    df = pd.read_csv('../data/allsides_balanced_news_headlines-texts.csv')
     df = df.dropna(subset=['text', 'bias_rating'])
     df = df[df['text'].str.len() > 10]
     
@@ -150,8 +151,15 @@ def evaluate_model():
         'label_mapping': label_mapping
     }
     
-    with open(f'roberta_finetuned_final_results_{timestamp}.json', 'w') as f:
+    # Ensure results directory exists
+    results_dir = '../results'
+    os.makedirs(results_dir, exist_ok=True)
+    
+    results_path = f'{results_dir}/roberta_finetuned_final_results_{timestamp}.json'
+    with open(results_path, 'w') as f:
         json.dump(results, f, indent=2)
+    
+    print(f"💾 Results saved to: {results_path}")
     
     return results
 
