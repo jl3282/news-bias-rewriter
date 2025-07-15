@@ -1,0 +1,16 @@
+[
+  {
+    "device": "cpu",
+    "success": true,
+    "total_time": 93.66467213630676,
+    "time_per_step": 1.8732934427261352,
+    "sample_size": 1600
+  },
+  {
+    "device": "mps",
+    "success": true,
+    "total_time": 101.10552501678467,
+    "time_per_step": 2.0221105003356934,
+    "sample_size": 1600
+  }
+]

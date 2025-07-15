@@ -1,0 +1,6 @@
+{
+  "timestamp": "20250715_035258",
+  "model_name": "peekayitachi/BiasCheck-RoBERTa",
+  "sample_size": 999,
+  "label_mapping": {
+    "left": 
