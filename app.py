@@ -264,7 +264,16 @@ class BiasDetector:
         return f"data:image/png;base64,{plot_url}"
 
 # Initialize the bias detector
-detector = BiasDetector()
+print("Loading model from models/roberta-combined-classifier...")
+try:
+    detector = BiasDetector()
+    print("Model loaded successfully!")
+    print(f"Label mapping: {detector.label_mapping}")
+except Exception as e:
+    print(f"ERROR: Failed to load model: {e}")
+    print("This might be because model files are missing or incompatible")
+    # Create a dummy detector that will show errors in the UI
+    detector = None
 
 @app.route('/')
 def index():
@@ -275,6 +284,9 @@ def index():
 def analyze_bias():
     """Analyze political bias of submitted text."""
     try:
+        if detector is None:
+            return jsonify({"error": "Model not loaded. Check server logs for details."}), 500
+            
         data = request.get_json()
         text = data.get('text', '').strip()
         
@@ -342,7 +354,11 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
     
-    if debug_mode:
-        print("Access the app at: http://localhost:5002")
+    print(f"Starting server on 0.0.0.0:{port}")
+    print(f"Debug mode: {debug_mode}")
     
-    app.run(debug=debug_mode, host='0.0.0.0', port=port) 
+    try:
+        app.run(debug=debug_mode, host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"Failed to start server: {e}")
+        raise 

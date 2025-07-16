@@ -77,7 +77,7 @@ venv.bak/
 # Model files and checkpoints
 models/*/checkpoint-*/
 models/*/pytorch_model.bin
-models/*/model.safetensors
+# models/*/model.safetensors  # Commented out to allow deployment
 !models/README.md
 
 # Training outputs
