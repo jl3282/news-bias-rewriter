@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Political Bias Detection & Rewriting Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto+Slab:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f5f3;
+            color: #222;
+            font-family: 'Roboto Mono', 'Menlo', 'Consolas', monospace;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 60px auto 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 48px 40px 40px 40px;
+            border: 1.5px solid #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-family: 'Roboto Slab', 'Georgia', serif;
+            font-size: 2.4em;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 1.1em;
+            color: #666;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .form-section label {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        textarea {
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            min-height: 260px;
+            max-height: 600px;
+            font-family: 'Roboto Mono', 'Menlo', 'Consolas', monospace;
+            font-size: 1.15em;
+            background: #f8f8f6;
+            border: 2px solid #d1cfc7;
+            border-radius: 6px;
+            padding: 24px 18px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            outline: none;
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+        textarea:focus {
+            border-color: #888;
+        }
+        .char-count {
+            text-align: right;
+            font-size: 0.95em;
+            color: #888;
+            margin-bottom: 18px;
+            width: 100%;
+        }
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .btn {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1em;
+            padding: 10px 28px;
+            border: 1.5px solid #bdbdbd;
+            border-radius: 5px;
+            background: #f5f5f3;
+            color: #222;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .btn:active {
+            background: #ecebe7;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #e8e8e8;
+            color: #999;
+            border-color: #ccc;
+        }
+        .btn:hover:not(:disabled) {
+            background: #ecebe7;
+            border-color: #999;
+        }
+        .results {
+            margin-top: 40px;
+            background: #f8f8f6;
+            border-radius: 8px;
+            border: 1.5px solid #e0e0e0;
+            padding: 36px 24px 24px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .results h2 {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        .prediction-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .metric-card {
+            flex: 1;
+            text-align: center;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .metric-label {
+            font-size: 0.9em;
+            color: #888;
+            letter-spacing: 1px;
+        }
+
+        .bar-chart-section {
+            margin: 36px 0 0 0;
+            width: 100%;
+        }
+        .bar-chart {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 120px;
+            width: 100%;
+            margin: 0 auto 0 auto;
+            gap: 18px;
+        }
+        .bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .bar-rect {
+            width: 38px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 8px;
+            transition: height 0.4s cubic-bezier(.4,2,.6,1);
+        }
+        .bar-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1em;
+            color: #888;
+            margin-top: 2px;
+        }
+        .bar-value {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 2px;
+        }
+        .bar-left { background: #1f77b4; }
+        .bar-center { background: #bbb; }
+        .bar-right { background: #d62728; }
+        
+        /* Side-by-side comparison styles */
+        .side-by-side-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+        }
+        .comparison-column {
+            flex: 1;
+            min-width: 0;
+        }
+        .comparison-label {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+            font-weight: bold;
+        }
+        .text-display {
+            background: #fff;
+            border: 2px solid #d1cfc7;
+            border-radius: 6px;
+            padding: 18px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            height: 350px;
+            overflow-y: auto;
+            word-wrap: break-word;
+        }
+        .text-display.original {
+            border-color: #888;
+            background: #f9f9f9;
+        }
+        .text-display.rewritten {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+        .comparison-controls {
+            margin-bottom: 12px;
+        }
+        @media (max-width: 768px) {
+            .side-by-side-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .text-display {
+                height: 250px;
+            }
+        }
+
+        .error {
+            background: #fbe9e7;
+            color: #b71c1c;
+            padding: 14px;
+            border-radius: 7px;
+            border-left: 4px solid #b71c1c;
+            margin-top: 18px;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .warning {
+            background: #fff8e1;
+            color: #f57c00;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #ff9800;
+            margin-top: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.95em;
+            display: none;
+        }
+        .warning.show {
+            display: block;
+        }
+        .warning-icon {
+            margin-right: 6px;
+        }
+        
+        /* Enhanced loading indicators */
+        .loading-indicator {
+            background: #f8f8f6;
+            border: 2px solid #d1cfc7;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .loading-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #888;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            flex: 1;
+            font-family: 'Roboto Mono', monospace;
+        }
+        #loadingMessage {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .loading-step {
+            font-size: 0.95em;
+            color: #888;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .loading-step.active {
+            color: #333;
+            font-weight: bold;
+            transform: translateX(4px);
+        }
+        .loading-step.completed {
+            color: #4CAF50;
+        }
+        @media (max-width: 600px) {
+            .loading-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 16px;
+            }
+        }
+        .example-texts {
+            margin-top: 30px;
+            padding: 18px;
+            background: #f5f5f3;
+            border-radius: 7px;
+            border: 1.5px solid #e0e0e0;
+        }
+        .example-texts h3 {
+            color: #333;
+            font-family: 'Roboto Slab', serif;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .example-item {
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            background: #fff;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            transition: background 0.2s;
+        }
+        .example-item:hover {
+            background: #ecebe7;
+        }
+        @media (max-width: 900px) {
+            .container { padding: 18px 2vw; }
+        }
+        @media (max-width: 600px) {
+            .container { padding: 8px 1vw; }
+            .content { padding: 0; }
+            textarea { min-height: 160px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Political Bias Detection & Rewriting Tool</h1>
+            <p>Analyze political bias and rewrite articles with different perspectives using AI</p>
+        </div>
+        <div class="content">
+            <div class="form-section">
+                <label for="articleText">Paste your news article text below:</label>
+                <textarea id="articleText" placeholder="Type or paste your article here..." maxlength="5000"></textarea>
+                <div class="char-count"><span id="charCount">0</span> / 5000 characters</div>
+                <div id="lengthWarning" class="warning">
+                    <span class="warning-icon">⚠️</span>
+                    <span id="warningMessage"></span>
+                </div>
+                <div class="btn-group">
+                    <button id="analyzeBtn" class="btn">Analyze</button>
+                    <button id="clearBtn" class="btn">Clear</button>
+                </div>
+                <div class="btn-group" style="margin-top: 12px;">
+                    <button id="rewriteLeftBtn" class="btn rewrite-btn" data-bias="left">Rewrite as Left-leaning</button>
+                    <button id="rewriteCenterBtn" class="btn rewrite-btn" data-bias="center">Rewrite as Neutral</button>
+                    <button id="rewriteRightBtn" class="btn rewrite-btn" data-bias="right">Rewrite as Right-leaning</button>
+                </div>
+            </div>
+            <div id="loading" class="loading-indicator" style="display:none;">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">
+                        <span id="loadingMessage">Analyzing article...</span>
+                        <div class="loading-steps">
+                            <div class="loading-step active" id="step1">📄 Processing text</div>
+                            <div class="loading-step" id="step2">🤖 Running AI analysis</div>
+                            <div class="loading-step" id="step3">📊 Generating results</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="results" class="results" style="display:none;">
+                <h2>Analysis Results</h2>
+                <div class="prediction-summary">
+                    <div class="metric-card">
+                        <div id="predictedBias" class="metric-value">-</div>
+                        <div class="metric-label">Predicted Bias</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="confidence" class="metric-value">-</div>
+                        <div class="metric-label">Confidence</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="textLength" class="metric-value">-</div>
+                        <div class="metric-label">Text Length</div>
+                    </div>
+                </div>
+
+                <div class="bar-chart-section">
+                    <div class="bar-chart" id="barChart">
+                        <!-- Bars will be rendered here -->
+                    </div>
+                </div>
+
+            </div>
+            <div id="rewriteResults" class="results" style="display:none;">
+                <h2>Rewritten Article</h2>
+                <div class="prediction-summary">
+                    <div class="metric-card">
+                        <div id="rewriteTargetBias" class="metric-value">-</div>
+                        <div class="metric-label">Target Bias</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="rewriteLength" class="metric-value">-</div>
+                        <div class="metric-label">New Length</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="rewriteModel" class="metric-value">-</div>
+                        <div class="metric-label">AI Model</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="rewriteTimestamp" class="metric-value">-</div>
+                        <div class="metric-label">Generated</div>
+                    </div>
+                </div>
+                
+                <!-- Side-by-side comparison view -->
+                <div class="comparison-section" style="margin-top: 24px;">
+                    <div class="comparison-controls" style="text-align: center; margin-bottom: 16px;">
+                        <button id="toggleViewBtn" class="btn" style="margin-bottom: 12px;">Switch to Single View</button>
+                    </div>
+                    
+                    <div id="sideBySideView" class="side-by-side-container">
+                        <div class="comparison-column">
+                            <label class="comparison-label">Original Text:</label>
+                            <div id="originalTextDisplay" class="text-display original"></div>
+                        </div>
+                        <div class="comparison-column">
+                            <label class="comparison-label">Rewritten Text:</label>
+                            <div id="rewrittenTextDisplay" class="text-display rewritten"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="singleView" class="single-view-container" style="display: none;">
+                        <label style="font-family: 'Roboto Slab', serif; font-size: 1.1em; color: #333; margin-bottom: 8px; display: block;">Rewritten Text:</label>
+                        <div id="rewrittenText" style="background: #fff; border: 2px solid #d1cfc7; border-radius: 6px; padding: 24px 18px; font-family: 'Roboto Mono', monospace; font-size: 1.1em; line-height: 1.6; color: #333; white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 18px; justify-content: center;">
+                    <button id="analyzeRewrittenBtn" class="btn">Analyze Rewritten Text</button>
+                    <button id="copyRewrittenBtn" class="btn">Copy to Clipboard</button>
+                </div>
+            </div>
+            <div id="rewrittenAnalysisResults" class="results" style="display:none;">
+                <h2>Rewritten Text Analysis</h2>
+                <div class="prediction-summary">
+                    <div class="metric-card">
+                        <div id="rewrittenPredictedBias" class="metric-value">-</div>
+                        <div class="metric-label">Predicted Bias</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="rewrittenConfidence" class="metric-value">-</div>
+                        <div class="metric-label">Confidence</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="rewrittenTextLength" class="metric-value">-</div>
+                        <div class="metric-label">Text Length</div>
+                    </div>
+                </div>
+
+                <div class="bar-chart-section">
+                    <div class="bar-chart" id="rewrittenBarChart">
+                        <!-- Bars will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            <div id="error" class="error" style="display:none;"></div>
+            <div class="example-texts">
+                <h3>Try Example Texts:</h3>
+                <div class="example-item" onclick="loadExample('left')"><strong>Left-leaning example:</strong> Click to load sample left-biased article text</div>
+                <div class="example-item" onclick="loadExample('center')"><strong>Center example:</strong> Click to load sample neutral article text</div>
+                <div class="example-item" onclick="loadExample('right')"><strong>Right-leaning example:</strong> Click to load sample right-biased article text</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const articleText = document.getElementById('articleText');
+        const charCount = document.getElementById('charCount');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        const barChart = document.getElementById('barChart');
+        const rewriteResults = document.getElementById('rewriteResults');
+        const rewrittenAnalysisResults = document.getElementById('rewrittenAnalysisResults');
+        const rewrittenBarChart = document.getElementById('rewrittenBarChart');
+        const rewriteButtons = document.querySelectorAll('.rewrite-btn');
+        const lengthWarning = document.getElementById('lengthWarning');
+        const warningMessage = document.getElementById('warningMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        
+        // Comparison view elements
+        const toggleViewBtn = document.getElementById('toggleViewBtn');
+        const sideBySideView = document.getElementById('sideBySideView');
+        const singleView = document.getElementById('singleView');
+        const originalTextDisplay = document.getElementById('originalTextDisplay');
+        const rewrittenTextDisplay = document.getElementById('rewrittenTextDisplay');
+        const rewrittenText = document.getElementById('rewrittenText');
+        
+        // View state
+        let isComparison = true;
+        let currentOriginalText = '';
+        let currentRewrittenText = '';
+        // Character count with length warnings
+        articleText.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = count;
+            
+            // Update button states
+            analyzeBtn.disabled = count < 10;
+            rewriteButtons.forEach(btn => {
+                btn.disabled = count < 10;
+            });
+            
+            // Show length warnings
+            showLengthWarning(count);
+        });
+        
+        function showLengthWarning(length) {
+            lengthWarning.classList.remove('show');
+            
+            if (length < 50 && length > 0) {
+                warningMessage.textContent = 'Very short article - analysis may be less accurate';
+                lengthWarning.classList.add('show');
+            } else if (length > 3000) {
+                warningMessage.textContent = 'Long article - only first 512 tokens will be analyzed';
+                lengthWarning.classList.add('show');
+            } else if (length > 4500) {
+                warningMessage.textContent = 'Very long article - consider breaking into smaller sections';
+                lengthWarning.classList.add('show');
+            }
+        }
+        
+        // Toggle view functionality
+        toggleViewBtn.addEventListener('click', function() {
+            isComparison = !isComparison;
+            if (isComparison) {
+                sideBySideView.style.display = 'flex';
+                singleView.style.display = 'none';
+                toggleViewBtn.textContent = 'Switch to Single View';
+                updateComparisonView();
+            } else {
+                sideBySideView.style.display = 'none';
+                singleView.style.display = 'block';
+                toggleViewBtn.textContent = 'Switch to Comparison View';
+                rewrittenText.textContent = currentRewrittenText;
+            }
+        });
+        
+        function updateComparisonView() {
+            if (originalTextDisplay && rewrittenTextDisplay) {
+                originalTextDisplay.textContent = currentOriginalText;
+                rewrittenTextDisplay.textContent = currentRewrittenText;
+            }
+        }
+        // Clear button
+        clearBtn.addEventListener('click', function() {
+            articleText.value = '';
+            charCount.textContent = '0';
+            analyzeBtn.disabled = true;
+            results.style.display = 'none';
+            rewriteResults.style.display = 'none';
+            rewrittenAnalysisResults.style.display = 'none';
+            error.style.display = 'none';
+            lengthWarning.classList.remove('show');
+            currentOriginalText = '';
+            currentRewrittenText = '';
+            rewriteButtons.forEach(btn => {
+                btn.disabled = true;
+            });
+        });
+        // Analyze button
+        analyzeBtn.addEventListener('click', function() {
+            const text = articleText.value.trim();
+            if (text.length < 10) {
+                showError('Please enter at least 10 characters.');
+                return;
+            }
+            analyzeText(text);
+        });
+        
+        // Rewrite buttons
+        rewriteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const text = articleText.value.trim();
+                const targetBias = this.getAttribute('data-bias');
+                if (text.length < 10) {
+                    showError('Please enter at least 10 characters.');
+                    return;
+                }
+                rewriteText(text, targetBias);
+            });
+        });
+        
+        // Analyze rewritten text button
+        document.getElementById('analyzeRewrittenBtn').addEventListener('click', function() {
+            if (currentRewrittenText && currentRewrittenText.length > 10) {
+                analyzeText(currentRewrittenText, true);
+            }
+        });
+        
+        // Copy rewritten text button
+        document.getElementById('copyRewrittenBtn').addEventListener('click', function() {
+            const textToCopy = currentRewrittenText || (isComparison ? 
+                rewrittenTextDisplay.textContent : rewrittenText.textContent);
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => {
+                    this.textContent = 'Copy to Clipboard';
+                }, 2000);
+            }).catch(() => {
+                showError('Failed to copy to clipboard');
+            });
+        });
+        function analyzeText(text, isRewritten = false) {
+            if (!isRewritten) {
+                currentOriginalText = text;
+            }
+            showLoadingSteps('analyze');
+            if (!isRewritten) {
+                results.style.display = 'none';
+            } else {
+                rewrittenAnalysisResults.style.display = 'none';
+            }
+            error.style.display = 'none';
+            analyzeBtn.disabled = true;
+            
+            fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showResults(data, isRewritten);
+                }
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+                showError('Network error. Please try again.');
+            });
+        }
+        
+        function rewriteText(text, targetBias) {
+            currentOriginalText = text;
+            showLoadingSteps('rewrite');
+            error.style.display = 'none';
+            rewriteResults.style.display = 'none';
+            rewriteButtons.forEach(btn => { btn.disabled = true; });
+            
+            fetch('/rewrite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, target_bias: targetBias })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                rewriteButtons.forEach(btn => { btn.disabled = false; });
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showRewriteResults(data);
+                }
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                rewriteButtons.forEach(btn => { btn.disabled = false; });
+                showError('Network error. Please try again.');
+            });
+        }
+        function showResults(data, isRewritten = false) {
+            const targetPrefix = isRewritten ? 'rewritten' : '';
+            const targetBiasId = isRewritten ? 'rewrittenPredictedBias' : 'predictedBias';
+            const targetConfidenceId = isRewritten ? 'rewrittenConfidence' : 'confidence';
+            const targetLengthId = isRewritten ? 'rewrittenTextLength' : 'textLength';
+            const targetChart = isRewritten ? rewrittenBarChart : barChart;
+            const targetResults = isRewritten ? rewrittenAnalysisResults : results;
+            
+            document.getElementById(targetBiasId).textContent = data.predicted_bias.toUpperCase();
+            document.getElementById(targetConfidenceId).textContent = `${(data.confidence * 100).toFixed(1)}%`;
+            document.getElementById(targetLengthId).textContent = `${data.text_length} chars`;
+            
+            // Render bar chart in order: left, center, right
+            const order = ['left', 'center', 'right'];
+            const colors = { left: 'bar-left', center: 'bar-center', right: 'bar-right' };
+            const values = order.map(k => data.probabilities[k] || 0);
+            const maxVal = Math.max(...values, 0.01);
+            
+            targetChart.innerHTML = order.map((k, i) => {
+                const val = data.probabilities[k] || 0;
+                const height = Math.round((val / maxVal) * 100);
+                return `<div class="bar">
+                    <div class="bar-rect ${colors[k]}" style="height:${height}px;"></div>
+                    <div class="bar-value">${(val * 100).toFixed(1)}%</div>
+                    <div class="bar-label">${k.charAt(0).toUpperCase() + k.slice(1)}</div>
+                </div>`;
+            }).join('');
+            
+            targetResults.style.display = 'block';
+            if (isRewritten) {
+                targetResults.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        function showRewriteResults(data) {
+            currentRewrittenText = data.rewritten;
+            
+            document.getElementById('rewriteTargetBias').textContent = data.target_bias.toUpperCase();
+            document.getElementById('rewriteLength').textContent = `${data.rewritten_length} chars`;
+            document.getElementById('rewriteModel').textContent = data.model_used;
+            document.getElementById('rewriteTimestamp').textContent = data.timestamp.split(' ')[1];
+            
+            // Update both views
+            if (isComparison) {
+                updateComparisonView();
+            } else {
+                rewrittenText.textContent = currentRewrittenText;
+            }
+            
+            rewriteResults.style.display = 'block';
+            rewriteResults.scrollIntoView({ behavior: 'smooth' });
+            
+            // Automatically analyze the rewritten text to show new bias statistics
+            setTimeout(() => {
+                analyzeText(data.rewritten, true);
+            }, 500);
+        }
+        
+        function showLoadingSteps(type) {
+            loading.style.display = 'block';
+            
+            // Reset steps
+            document.querySelectorAll('.loading-step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            if (type === 'analyze') {
+                loadingMessage.textContent = 'Analyzing article bias...';
+                document.getElementById('step1').textContent = '📄 Processing text';
+                document.getElementById('step2').textContent = '🤖 Running AI analysis';
+                document.getElementById('step3').textContent = '📊 Generating results';
+            } else if (type === 'rewrite') {
+                loadingMessage.textContent = 'Rewriting article...';
+                document.getElementById('step1').textContent = '📝 Preparing rewrite';
+                document.getElementById('step2').textContent = '🤖 Generating new version';
+                document.getElementById('step3').textContent = '✨ Finalizing text';
+            }
+            
+            // Animate steps
+            let currentStep = 1;
+            document.getElementById('step1').classList.add('active');
+            
+            const stepInterval = setInterval(() => {
+                if (currentStep <= 3) {
+                    document.getElementById(`step${currentStep}`).classList.remove('active');
+                    document.getElementById(`step${currentStep}`).classList.add('completed');
+                    currentStep++;
+                    if (currentStep <= 3) {
+                        document.getElementById(`step${currentStep}`).classList.add('active');
+                    }
+                } else {
+                    clearInterval(stepInterval);
+                }
+            }, 800);
+        }
+        
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+        function loadExample(type) {
+            const examples = {
+                'left': `Progressive lawmakers unveiled a comprehensive climate action plan yesterday, demanding immediate federal investment in renewable energy infrastructure and environmental justice initiatives. The proposal, backed by environmental advocacy groups, calls for aggressive emissions reductions and a transition away from fossil fuel dependence. Critics from conservative think tanks argue the plan would burden taxpayers and hurt economic growth, but supporters emphasize the urgent need for government intervention to address the climate crisis.`,
+                'center': `The Federal Reserve announced a 0.25% interest rate adjustment following their monthly meeting, citing current economic indicators and inflation data. The decision was supported by a majority of board members after reviewing employment statistics, consumer spending patterns, and market projections. Economists have varying perspectives on the impact, with some predicting positive effects on borrowing while others express concerns about potential market volatility. The central bank will continue monitoring economic conditions for future policy decisions.`,
+                'right': `Small business owners across the nation are celebrating new regulatory reforms that reduce bureaucratic red tape and eliminate costly compliance requirements. The business-friendly policies, supported by free market advocates, are expected to boost entrepreneurship and create jobs by allowing companies to focus on growth rather than government paperwork. Chamber of Commerce representatives praised the deregulation efforts, while some progressive groups voiced concerns about potential impacts on consumer protections and worker safety standards.`
+            };
+            
+            const exampleText = examples[type];
+            articleText.value = exampleText;
+            charCount.textContent = exampleText.length;
+            analyzeBtn.disabled = false;
+            
+            // Check for length warnings
+            showLengthWarning(exampleText.length);
+            
+            // Clear previous comparison data
+            currentOriginalText = '';
+            currentRewrittenText = '';
+            
+            // Enable rewrite buttons since we now have enough text
+            rewriteButtons.forEach(btn => { btn.disabled = false; });
+            articleText.scrollIntoView({ behavior: 'smooth' });
+        }
+        analyzeBtn.disabled = true;
+        rewriteButtons.forEach(btn => { btn.disabled = true; });
+    </script>
+</body>
+</html> 

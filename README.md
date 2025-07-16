@@ -50,6 +50,9 @@ This project combines bias detection and content rewriting to:
 
 ```
 news-bias-rewriter/
+├── app.py                  # Flask web application for bias detection
+├── templates/              # HTML templates for web interface
+│   └── index.html          # Main web interface template
 ├── src/                    # Main source code
 │   ├── train_combined_dataset.py    # Combined dataset training (59K articles)
 │   ├── roberta_finetuning.py        # RoBERTa fine-tuning
@@ -64,7 +67,6 @@ news-bias-rewriter/
 │   └── splits/             # Pre-defined train/val/test splits
 ├── results/                # Training results & evaluations
 ├── docs/                   # Documentation & analysis
-├── archive/                # Previous experiments
 └── README.md
 ```
 
@@ -124,6 +126,23 @@ pip install -r requirements.txt
 
 ## Usage Examples
 
+### Web Interface (Recommended)
+
+**Launch the web application:**
+```bash
+python app.py
+```
+Then open your browser to `http://localhost:5001`
+
+**Features:**
+- Real-time political bias analysis
+- Interactive visualizations showing probability distributions
+- Political spectrum positioning
+- Example texts for testing
+- Responsive design for desktop and mobile
+
+### Command Line Training
+
 **Train the combined dataset model:**
 ```bash
 cd src
@@ -136,14 +155,7 @@ cd src
 python evaluate_trained_model.py
 ```
 
-**Process text input:**
-```python
-from scripts.input_handler import load_text_from_file
-article = load_text_from_file("example.txt")
-# ... further processing ...
-```
-
-**Note:** The latest trained model achieves 78.1% accuracy and is saved to `models/roberta-combined-classifier/`
+**Note:** The latest trained model achieves 78.1% accuracy and is saved to `models/roberta-combined-classifier/` (not pushed due to the size)
 
 ## Contributing
 

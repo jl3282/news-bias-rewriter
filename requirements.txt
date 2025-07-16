@@ -5,3 +5,7 @@ tqdm
 scikit-learn
 numpy
 scipy
+flask
+matplotlib
+seaborn
+openai
