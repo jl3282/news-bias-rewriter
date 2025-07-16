@@ -13,6 +13,7 @@ from flask import Flask, render_template, request, jsonify
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
+os.environ['MPLCONFIGDIR'] = '/tmp'  # Speed up matplotlib on deployment
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
@@ -275,6 +276,15 @@ except Exception as e:
     # Create a dummy detector that will show errors in the UI
     detector = None
 
+# Preload matplotlib to avoid delays
+print("Preloading matplotlib...")
+try:
+    plt.figure()
+    plt.close()
+    print("Matplotlib ready!")
+except Exception as e:
+    print(f"Matplotlib warning: {e}")
+
 @app.route('/')
 def index():
     """Main page with input form."""
@@ -342,23 +352,33 @@ def health_check():
     """Health check endpoint."""
     return jsonify({
         "status": "healthy",
-        "model_loaded": detector.model is not None,
+        "model_loaded": detector is not None and detector.model is not None if detector else False,
         "timestamp": datetime.now().isoformat()
     })
 
+@app.route('/ping')
+def ping():
+    """Simple ping endpoint for port detection."""
+    return "pong"
+
 if __name__ == '__main__':
     print("Starting Political Bias Detection Web App...")
-    print(f"Model path: {detector.model_path}")
     
     # Get port from environment variable (for deployment) or default to 5002
     port = int(os.environ.get('PORT', 5002))
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
     
-    print(f"Starting server on 0.0.0.0:{port}")
+    print(f"Port: {port}")
     print(f"Debug mode: {debug_mode}")
+    print(f"Model loaded: {detector is not None}")
+    if detector:
+        print(f"Model path: {detector.model_path}")
+    
+    print(f"🚀 Starting Flask server on 0.0.0.0:{port}")
+    print("⏳ Server should be ready in a few seconds...")
     
     try:
-        app.run(debug=debug_mode, host='0.0.0.0', port=port)
+        app.run(debug=debug_mode, host='0.0.0.0', port=port, threaded=True)
     except Exception as e:
-        print(f"Failed to start server: {e}")
+        print(f"❌ Failed to start server: {e}")
         raise 
