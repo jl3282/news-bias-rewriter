@@ -1,0 +1,24 @@
+{
+  "timestamp": "20250715_232114",
+  "model_name": "roberta-combined-dataset",
+  "test_size": 8895,
+  "accuracy": 0.7805508712759978,
+  "f1_macro": 0.7807266581547149,
+  "precision_macro": 0.7825956077022799,
+  "recall_macro": 0.7808476448319434,
+  "per_class_f1": [
+    0.7845176198729058,
+    0.7806432038834952,
+    0.7770191507077435
+  ],
+  "per_class_support": [
+    2589,
+    3163,
+    3143
+  ],
+  "label_mapping": {
+    "0": "center",
+    "1": "left",
+    "2": "right"
+  }
+}
